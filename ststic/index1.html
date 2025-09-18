@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RAG Chat Interface</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        }
+
+        body {
+            background-color: #343541;
+            color: #FFFFFF;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chat-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            margin-top: 80px;
+        }
+
+        .message {
+            display: flex;
+            padding: 20px;
+            gap: 20px;
+        }
+
+        .user-message {
+            background-color: #343541;
+        }
+
+        .assistant-message {
+            background-color: #444654;
+        }
+
+        .avatar {
+            width: 30px;
+            height: 30px;
+            border-radius: 2px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        .user-avatar {
+            background-color: #7C3AED;
+        }
+
+        .assistant-avatar {
+            background-color: #10A37F;
+        }
+
+        .message-content {
+            flex: 1;
+            line-height: 1.5;
+        }
+
+        .sources {
+            margin-top: 10px;
+            font-size: 0.9em;
+            color: #8E8EA0;
+        }
+
+        .source-item {
+            display: inline-block;
+            background-color: #2A2B32;
+            padding: 2px 8px;
+            margin: 2px;
+            border-radius: 4px;
+        }
+
+        .input-container {
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background-color: #343541;
+            border-top: 1px solid #444654;
+        }
+
+        #userInput {
+            flex: 1;
+            padding: 12px;
+            border-radius: 4px;
+            border: 1px solid #565869;
+            background-color: #40414F;
+            color: white;
+            font-size: 1rem;
+            resize: none;
+            height: 52px;
+            max-height: 200px;
+        }
+
+        #userInput:focus {
+            outline: none;
+            border-color: #7C3AED;
+        }
+
+        #sendButton {
+            padding: 12px 20px;
+            background-color: #7C3AED;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+
+        #sendButton:disabled {
+            background-color: #565869;
+            cursor: not-allowed;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #7C3AED;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .select-wrapper {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            right: 20px;
+            z-index: 10;
+            display: flex;
+            gap: 10px;
+            background-color: #343541;
+            padding: 10px;
+            flex-wrap: wrap;
+        }
+
+        .select-container {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .select-label {
+            font-size: 0.9rem;
+            color: #8E8EA0;
+        }
+
+        select {
+            padding: 8px 12px;
+            border-radius: 4px;
+            border: 1px solid #565869;
+            background-color: #40414F;
+            color: white;
+            font-size: 1rem;
+            cursor: pointer;
+            width: 180px;
+        }
+
+        select:focus {
+            outline: none;
+            border-color: #7C3AED;
+        }
+
+        select option {
+            background-color: #40414F;
+            color: white;
+        }
+
+        @media (max-width: 768px) {
+            .select-wrapper {
+                flex-direction: column;
+            }
+            .chat-container {
+                margin-top: 200px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="select-wrapper">
+        <div class="select-container">
+            <span class="select-label">Function</span>
+            <select id="functionSelect">
+                <option value="">Select Function</option>
+                <option value="Engineer/Designer">Engineer/Designer</option>
+                <option value="System Admin">System Admin</option>
+                <option value="Program Manager">Program Manager</option>
+                <option value="Non-Engineers">Non-Engineers</option>
+            </select>
+        </div>
+        <div class="select-container">
+            <span class="select-label">Domain</span>
+            <select id="domainSelect">
+                <option value="">Select Domain</option>
+                <option value="Mechanical">Mechanical</option>
+                <option value="Electrical">Electrical</option>
+                <option value="Manufacturing">Manufacturing</option>
+                <option value="System Simulation">System Simulation</option>
+            </select>
+        </div>
+        <div class="select-container">
+            <span class="select-label">Industry</span>
+            <select id="industrySelect">
+                <option value="">Select Industry</option>
+                <option value="Automotive">Automotive</option>
+                <option value="Aerospace">Aerospace</option>
+                <option value="Heavy Equipment">Heavy Equipment</option>
+            </select>
+        </div>
+        <div class="select-container">
+            <span class="select-label">Access Level</span>
+            <select id="accessLevelSelect">
+                <option value="">Select Access Level</option>
+                <option value="Advanced">Advanced</option>
+                <option value="Administrator">Administrator</option>
+                <option value="Senior">Senior</option>
+                <option value="Basic">Basic</option>
+            </select>
+        </div>
+    </div>
+    <div class="chat-container" id="chatContainer">
+        <div class="message assistant-message">
+            <div class="avatar assistant-avatar">A</div>
+            <div class="message-content">
+                Hello! I'm ready to help. You can optionally select your function, domain, industry, and access level for more specialized responses.
+            </div>
+        </div>
+    </div>
+    <div class="input-container">
+        <textarea 
+            id="userInput" 
+            placeholder="Type your message here..."
+            rows="1"
+            onkeydown="if(event.keyCode === 13 && !event.shiftKey) { event.preventDefault(); sendMessage(); }">
+        </textarea>
+        <button id="sendButton" onclick="sendMessage()">Send</button>
+    </div>
+
+    <script>
+        const chatContainer = document.getElementById('chatContainer');
+        const userInput = document.getElementById('userInput');
+        const sendButton = document.getElementById('sendButton');
+        const functionSelect = document.getElementById('functionSelect');
+        const domainSelect = document.getElementById('domainSelect');
+        const industrySelect = document.getElementById('industrySelect');
+        const accessLevelSelect = document.getElementById('accessLevelSelect');
+
+        function adjustTextareaHeight() {
+            userInput.style.height = 'auto';
+            userInput.style.height = Math.min(userInput.scrollHeight, 200) + 'px';
+        }
+
+        userInput.addEventListener('input', adjustTextareaHeight);
+
+        function addMessage(content, isUser, sources = []) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${isUser ? 'user-message' : 'assistant-message'}`;
+
+            const avatarDiv = document.createElement('div');
+            avatarDiv.className = `avatar ${isUser ? 'user-avatar' : 'assistant-avatar'}`;
+            avatarDiv.textContent = isUser ? 'U' : 'A';
+
+            const contentDiv = document.createElement('div');
+            contentDiv.className = 'message-content';
+            contentDiv.textContent = content;
+
+            if (sources && sources.length > 0) {
+                const sourcesDiv = document.createElement('div');
+                sourcesDiv.className = 'sources';
+                sourcesDiv.innerHTML = '<strong>Sources:</strong><br>' + 
+                    sources.map(source => `<span class="source-item">${source}</span>`).join(' ');
+                contentDiv.appendChild(sourcesDiv);
+            }
+
+            messageDiv.appendChild(avatarDiv);
+            messageDiv.appendChild(contentDiv);
+            chatContainer.appendChild(messageDiv);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        async function sendMessage() {
+            const message = userInput.value.trim();
+            if (!message) return;
+
+            userInput.disabled = true;
+            sendButton.disabled = true;
+            sendButton.innerHTML = '<div class="loading"></div>';
+
+            addMessage(message, true);
+
+            try {
+                // Create base request body
+                const requestBody = {
+                    query: message,
+                    top_k: 3
+                };
+
+                // Only add selected values to the request
+                if (functionSelect.value) requestBody.function = functionSelect.value;
+                if (domainSelect.value) requestBody.domain = domainSelect.value;
+                if (industrySelect.value) requestBody.industry = industrySelect.value;
+                if (accessLevelSelect.value) requestBody.access_level = accessLevelSelect.value;
+
+                const response = await fetch('/rag/query', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(requestBody)
+                });
+
+                const data = await response.json();
+                addMessage(data.answer, false, data.sources);
+            } catch (error) {
+                addMessage('Sorry, there was an error processing your request.', false);
+            }
+
+            userInput.value = '';
+            userInput.style.height = '52px';
+            userInput.disabled = false;
+            sendButton.disabled = false;
+            sendButton.textContent = 'Send';
+            userInput.focus();
+        }
+    </script>
+</body>
+</html>
